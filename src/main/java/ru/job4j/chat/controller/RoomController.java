@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.server.ResponseStatusException;
 import ru.job4j.chat.model.Message;
 import ru.job4j.chat.model.Room;
 import ru.job4j.chat.repository.RoomRepository;
@@ -28,7 +29,7 @@ public class RoomController {
         this.rest = rest;
     }
 
-    @GetMapping("/")
+    @GetMapping("/all")
     public List<Room> findAll() {
         return StreamSupport.stream(
                 this.roomRepository.findAll().spliterator(), false
@@ -46,32 +47,59 @@ public class RoomController {
 
     @GetMapping("/{id}")
     public ResponseEntity<Room> findById(@PathVariable int id) {
-        var person = this.roomRepository.findById(id);
-        return new ResponseEntity<>(
-                person.orElse(new Room()),
-                person.isPresent() ? HttpStatus.OK : HttpStatus.NOT_FOUND
-        );
+        validate(id);
+        Room room = roomRepository.findById(id).orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        String.format("Room with id %s not found.", id)));
+
+        return new ResponseEntity<>(room, HttpStatus.OK);
     }
 
     @PostMapping("/")
     public ResponseEntity<Room> create(@RequestBody Room room) {
+        validate(room);
         return new ResponseEntity<>(
                 this.roomRepository.save(room),
                 HttpStatus.CREATED
         );
     }
 
-    @PutMapping("/")
-    public ResponseEntity<Void> update(@RequestBody Room room) {
-        this.roomRepository.save(room);
-        return ResponseEntity.ok().build();
+    @PutMapping("/{id}")
+    public ResponseEntity<Void> update(@PathVariable int id, @RequestBody Room room) {
+        validate(id);
+        validate(room);
+        var existingRoom = roomRepository.findById(id);
+        if (existingRoom.isPresent()) {
+            var updRoom = existingRoom.get();
+            updRoom.setName(room.getName());
+            updRoom.setOwner(room.getOwner());
+            roomRepository.save(updRoom);
+            return ResponseEntity.ok().build();
+        } else {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable int id) {
+        validate(id);
         Room room = new Room();
         room.setId(id);
         this.roomRepository.delete(room);
         return ResponseEntity.ok().build();
+    }
+
+    private void validate(Room room) {
+        var name = room.getName();
+        var owner = room.getOwner();
+        if (name == null || owner == null) {
+            throw new NullPointerException("Room and owner mustn't be empty");
+        }
+    }
+
+    private void validate(int id) {
+        if (id < 1) {
+            throw new IllegalArgumentException("Id must be > 0");
+        }
     }
 }
