@@ -1,6 +1,7 @@
 package ru.job4j.chat.controller;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
@@ -19,8 +20,12 @@ public class RoleController {
     }
 
     @GetMapping("/")
-    public List<Role> findAll() {
-        return (List<Role>) roleRepository.findAll();
+    public ResponseEntity<List<Role>> findAll() {
+        List<Role> body = (List<Role>) roleRepository.findAll();
+        return ResponseEntity.status(HttpStatus.OK)
+                .header("Job4jCustomHeader", "job4j")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(body);
     }
 
     @GetMapping("/{id}")
