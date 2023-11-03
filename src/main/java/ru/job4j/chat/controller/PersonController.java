@@ -8,9 +8,16 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import ru.job4j.chat.handlers.PasswordException;
 import ru.job4j.chat.model.Person;
+import ru.job4j.chat.model.Role;
+import ru.job4j.chat.model.dto.PersonDTO;
 import ru.job4j.chat.repository.PersonRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import ru.job4j.chat.repository.RoleRepository;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 @RestController
@@ -18,13 +25,58 @@ import java.util.List;
 public class PersonController {
     private static final Logger LOGGER = LoggerFactory.getLogger(PersonController.class.getSimpleName());
     private final PersonRepository persons;
+    private final RoleRepository roleRepository;
     private final BCryptPasswordEncoder encoder;
     private final ObjectMapper objectMapper;
 
-    public PersonController(PersonRepository persons, BCryptPasswordEncoder encoder, ObjectMapper objectMapper) {
+    public PersonController(PersonRepository persons, RoleRepository roleRepository, BCryptPasswordEncoder encoder, ObjectMapper objectMapper) {
         this.persons = persons;
+        this.roleRepository = roleRepository;
         this.encoder = encoder;
         this.objectMapper = objectMapper;
+    }
+
+    @PatchMapping("/patch")
+    public Person patch(@RequestBody PersonDTO personDTO) throws InvocationTargetException, IllegalAccessException {
+        System.out.println("DTO: " + personDTO);
+        var current = persons.findById(personDTO.getId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        System.out.println("Current: " + current);
+        List<Role> roles = new ArrayList<>();
+        if (personDTO.getRoles() != null && personDTO.getRoles().length > 0) {
+            for (int id : personDTO.getRoles()) {
+                roles.add(roleRepository.findById(id)
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND)));
+            }
+        } else {
+            roles = null;
+        }
+        Person person = PersonDTO.toPerson(personDTO, roles);
+        System.out.println("DTO to Person: " + person);
+        var methods = current.getClass().getDeclaredMethods();
+        var namePerMethod = new HashMap<String, Method>();
+        for (var method : methods) {
+            var name = method.getName();
+            if (name.startsWith("get") || name.startsWith("set")) {
+                namePerMethod.put(name, method);
+            }
+        }
+        for (var name : namePerMethod.keySet()) {
+            if (name.startsWith("get")) {
+                var getMethod = namePerMethod.get(name);
+                var setMethod = namePerMethod.get(name.replace("get", "set"));
+                if (setMethod == null) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid properties mapping");
+                }
+                Object newValue = getMethod.invoke(person);
+                if (newValue != null) {
+                    setMethod.invoke(current, newValue);
+                }
+            }
+        }
+        System.out.println("Current pre save:" + current);
+        persons.save(current);
+        return current;
     }
 
     @GetMapping("/all")

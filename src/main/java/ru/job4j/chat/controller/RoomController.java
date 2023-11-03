@@ -1,15 +1,19 @@
 package ru.job4j.chat.controller;
 
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
 import ru.job4j.chat.model.Message;
+import ru.job4j.chat.model.Person;
 import ru.job4j.chat.model.Room;
+import ru.job4j.chat.model.dto.RoomDTO;
+import ru.job4j.chat.repository.PersonRepository;
 import ru.job4j.chat.repository.RoomRepository;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -19,14 +23,48 @@ import java.util.stream.StreamSupport;
 public class RoomController {
 
     private static final String API = "http://localhost:8080/message/";
-
+    private final PersonRepository persons;
     private final RoomRepository roomRepository;
-
     private final RestTemplate rest;
 
-    public RoomController(final RoomRepository roomRepository, RestTemplate rest) {
+    public RoomController(PersonRepository persons, final RoomRepository roomRepository, RestTemplate rest) {
+        this.persons = persons;
         this.roomRepository = roomRepository;
         this.rest = rest;
+    }
+
+    @PatchMapping("/patch")
+    public Room patch(@RequestBody RoomDTO roomDTO) throws InvocationTargetException, IllegalAccessException {
+        System.out.println("DTO: " + roomDTO);
+        var current = roomRepository.findById(roomDTO.getId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        Person person = persons.findById(roomDTO.getOwnerId()).orElse(null);
+        Room room = RoomDTO.toRoom(roomDTO, person);
+        System.out.println("DTO to Room: " + room);
+        var methods = current.getClass().getDeclaredMethods();
+        var namePerMethod = new HashMap<String, Method>();
+        for (var method : methods) {
+            var name = method.getName();
+            if (name.startsWith("get") || name.startsWith("set")) {
+                namePerMethod.put(name, method);
+            }
+        }
+        for (var name : namePerMethod.keySet()) {
+            if (name.startsWith("get")) {
+                var getMethod = namePerMethod.get(name);
+                var setMethod = namePerMethod.get(name.replace("get", "set"));
+                if (setMethod == null) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid properties mapping");
+                }
+                Object newValue = getMethod.invoke(room);
+                if (newValue != null) {
+                    setMethod.invoke(current, newValue);
+                }
+            }
+        }
+        System.out.println("Current pre save:" + current);
+        roomRepository.save(current);
+        return current;
     }
 
     @GetMapping("/all")
