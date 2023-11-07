@@ -2,6 +2,7 @@ package ru.job4j.chat.controller;
 
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
@@ -9,8 +10,10 @@ import ru.job4j.chat.model.Message;
 import ru.job4j.chat.model.Person;
 import ru.job4j.chat.model.Room;
 import ru.job4j.chat.model.dto.RoomDTO;
+import ru.job4j.chat.model.validator.Operation;
 import ru.job4j.chat.repository.PersonRepository;
 import ru.job4j.chat.repository.RoomRepository;
+import javax.validation.Valid;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -20,8 +23,8 @@ import java.util.stream.StreamSupport;
 
 @RestController
 @RequestMapping("/room")
+@Validated
 public class RoomController {
-
     private static final String API = "http://localhost:8080/message/";
     private final PersonRepository persons;
     private final RoomRepository roomRepository;
@@ -34,7 +37,8 @@ public class RoomController {
     }
 
     @PatchMapping("/patch")
-    public Room patch(@RequestBody RoomDTO roomDTO) throws InvocationTargetException, IllegalAccessException {
+    @Validated(Operation.OnPatch.class)
+    public Room patch(@Valid @RequestBody RoomDTO roomDTO) throws InvocationTargetException, IllegalAccessException {
         System.out.println("DTO: " + roomDTO);
         var current = roomRepository.findById(roomDTO.getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
@@ -94,28 +98,36 @@ public class RoomController {
     }
 
     @PostMapping("/")
-    public ResponseEntity<Room> create(@RequestBody Room room) {
-        validate(room);
+    @Validated(Operation.OnCreate.class)
+    public ResponseEntity<Room> create(@Valid @RequestBody RoomDTO roomDTO) {
+        var ownerId = roomDTO.getOwnerId();
+        var owner = persons.findById(ownerId).orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        String.format("User with id %s not found.", ownerId))
+        );
+        Room room = Room.of(0, roomDTO.getName(), owner);
         return new ResponseEntity<>(
                 this.roomRepository.save(room),
                 HttpStatus.CREATED
         );
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<Void> update(@PathVariable int id, @RequestBody Room room) {
-        validate(id);
-        validate(room);
-        var existingRoom = roomRepository.findById(id);
-        if (existingRoom.isPresent()) {
-            var updRoom = existingRoom.get();
-            updRoom.setName(room.getName());
-            updRoom.setOwner(room.getOwner());
-            roomRepository.save(updRoom);
-            return ResponseEntity.ok().build();
-        } else {
-            return ResponseEntity.notFound().build();
-        }
+    @PutMapping("/")
+    @Validated(Operation.OnUpdate.class)
+    public ResponseEntity<Void> update(@Valid @RequestBody RoomDTO roomDTO) {
+        var id = roomDTO.getId();
+        var updRoom = roomRepository.findById(id).orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        String.format("Room with id %s not found.", id)));
+        var ownerId = roomDTO.getOwnerId();
+        var owner = persons.findById(ownerId).orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        String.format("User with id %s not found.", ownerId))
+        );
+        updRoom.setName(roomDTO.getName());
+        updRoom.setOwner(owner);
+        roomRepository.save(updRoom);
+        return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/{id}")
@@ -125,14 +137,6 @@ public class RoomController {
         room.setId(id);
         this.roomRepository.delete(room);
         return ResponseEntity.ok().build();
-    }
-
-    private void validate(Room room) {
-        var name = room.getName();
-        var owner = room.getOwner();
-        if (name == null || owner == null) {
-            throw new NullPointerException("Room and owner mustn't be empty");
-        }
     }
 
     private void validate(int id) {

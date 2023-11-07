@@ -1,7 +1,10 @@
 package ru.job4j.chat.model;
 
 import org.hibernate.annotations.DynamicUpdate;
+import ru.job4j.chat.model.validator.Operation;
 import javax.persistence.*;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Positive;
 import java.util.List;
 import java.util.Objects;
 
@@ -9,11 +12,19 @@ import java.util.Objects;
 @DynamicUpdate
 @Table(name = "person")
 public class Person {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Positive(message = "Id should be positive", groups = {Operation.OnUpdate.class})
     private int id;
+
     @Column(unique = true)
+    @NotBlank(message = "Login should not be empty",
+            groups = {Operation.OnCreate.class, Operation.OnUpdate.class})
     private String login;
+
+    @NotBlank(message = "Password should not be empty",
+            groups = {Operation.OnCreate.class, Operation.OnUpdate.class})
     private String password;
 
     @ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})

@@ -2,10 +2,14 @@ package ru.job4j.chat.model.dto;
 
 import ru.job4j.chat.model.Person;
 import ru.job4j.chat.model.Role;
+import ru.job4j.chat.model.validator.Operation;
+
+import javax.validation.constraints.Positive;
 import java.util.List;
 import java.util.Objects;
 
 public class PersonDTO {
+    @Positive(message = "Id should be positive", groups = {Operation.OnPatch.class})
     private int id;
     private String login;
     private String password;

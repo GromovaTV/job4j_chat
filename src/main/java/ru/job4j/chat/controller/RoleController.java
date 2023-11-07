@@ -3,18 +3,21 @@ package ru.job4j.chat.controller;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import ru.job4j.chat.model.Role;
+import ru.job4j.chat.model.validator.Operation;
 import ru.job4j.chat.repository.RoleRepository;
+import javax.validation.Valid;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/role")
+@Validated
 public class RoleController {
     private final RoleRepository roleRepository;
 
@@ -23,7 +26,8 @@ public class RoleController {
     }
 
     @PatchMapping("/patch")
-    public Role patch(@RequestBody Role role) throws InvocationTargetException, IllegalAccessException {
+    @Validated(Operation.OnPatch.class)
+    public Role patch(@Valid @RequestBody Role role) throws InvocationTargetException, IllegalAccessException {
         var current = roleRepository.findById(role.getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         var methods = current.getClass().getDeclaredMethods();
@@ -64,40 +68,32 @@ public class RoleController {
     @GetMapping("/{id}")
     public ResponseEntity<Role> findById(@PathVariable int id) {
         validate(id);
-        Optional<Role> role = this.roleRepository.findById(id);
-        if (role.isEmpty()) {
-            System.out.println("ROLE IS EMPTY");
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
-                    String.format("Role with id %s not found.", id));
-        } else {
-            System.out.println(role.get());
-
-        }
-        return new ResponseEntity<>(role.get(), HttpStatus.OK);
+        return new ResponseEntity<>(
+                this.roleRepository.findById(id).orElseThrow(
+                        () -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                                String.format("Role with id %s not found.", id))),
+                HttpStatus.OK);
     }
 
     @PostMapping("/")
-    public ResponseEntity<Role> create(@RequestBody Role role) {
-        validate(role);
+    @Validated(Operation.OnCreate.class)
+    public ResponseEntity<Role> create(@Valid @RequestBody Role role) {
         return new ResponseEntity<>(
                 this.roleRepository.save(role),
                 HttpStatus.CREATED
         );
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<Void> update(@PathVariable int id, @RequestBody Role role) {
-        validate(id);
-        validate(role);
-        var existingRole = roleRepository.findById(id);
-        if (existingRole.isPresent()) {
-            var updRole = existingRole.get();
-            updRole.setRole(role.getRole());
-            roleRepository.save(updRole);
-            return ResponseEntity.ok().build();
-        } else {
-            return ResponseEntity.notFound().build();
-        }
+    @PutMapping("/")
+    @Validated(Operation.OnUpdate.class)
+    public ResponseEntity<Void> update(@Valid @RequestBody Role role) {
+        int id = role.getId();
+        Role updRole = roleRepository.findById(id).orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        String.format("Role with id %s not found.", id)));
+        updRole.setRole(role.getRole());
+        roleRepository.save(updRole);
+        return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/{id}")
@@ -107,13 +103,6 @@ public class RoleController {
         role.setId(id);
         this.roleRepository.delete(role);
         return ResponseEntity.ok().build();
-    }
-
-    private void validate(Role role) {
-        var r = role.getRole();
-        if (r == null) {
-            throw new NullPointerException("Role mustn't be empty");
-        }
     }
 
     private void validate(int id) {

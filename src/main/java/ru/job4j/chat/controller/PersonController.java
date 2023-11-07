@@ -4,16 +4,19 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import ru.job4j.chat.handlers.PasswordException;
 import ru.job4j.chat.model.Person;
 import ru.job4j.chat.model.Role;
 import ru.job4j.chat.model.dto.PersonDTO;
+import ru.job4j.chat.model.validator.Operation;
 import ru.job4j.chat.repository.PersonRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.job4j.chat.repository.RoleRepository;
+import javax.validation.Valid;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -22,6 +25,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/users")
+@Validated
 public class PersonController {
     private static final Logger LOGGER = LoggerFactory.getLogger(PersonController.class.getSimpleName());
     private final PersonRepository persons;
@@ -37,7 +41,8 @@ public class PersonController {
     }
 
     @PatchMapping("/patch")
-    public Person patch(@RequestBody PersonDTO personDTO) throws InvocationTargetException, IllegalAccessException {
+    @Validated(Operation.OnPatch.class)
+    public Person patch(@Valid @RequestBody PersonDTO personDTO) throws InvocationTargetException, IllegalAccessException {
         System.out.println("DTO: " + personDTO);
         var current = persons.findById(personDTO.getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
@@ -94,28 +99,27 @@ public class PersonController {
     }
 
     @PostMapping("/sign-up")
-    public ResponseEntity<Person> signUp(@RequestBody Person person) {
+    @Validated(Operation.OnCreate.class)
+    public ResponseEntity<Person> signUp(@Valid @RequestBody Person person) {
         validate(person);
         person.setPassword(encoder.encode(person.getPassword()));
         Person save = persons.save(person);
         return new ResponseEntity<>(save, HttpStatus.CREATED);
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<Void> update(@PathVariable int id, @RequestBody Person person) {
-        validate(id);
+    @PutMapping("/")
+    @Validated(Operation.OnUpdate.class)
+    public ResponseEntity<Void> update(@Valid @RequestBody Person person) {
+        var id = person.getId();
         validate(person);
-        var existingPerson = persons.findById(id);
-        if (existingPerson.isPresent()) {
-            var updPerson = existingPerson.get();
-            updPerson.setLogin(person.getLogin());
-            updPerson.setPassword(person.getPassword());
-            updPerson.setRoles(person.getRoles());
-            persons.save(updPerson);
-            return ResponseEntity.ok().build();
-        } else {
-            return ResponseEntity.notFound().build();
-        }
+        var updPerson = persons.findById(person.getId()).orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                String.format("User with id %s not found.", id)));
+        updPerson.setLogin(person.getLogin());
+        updPerson.setPassword(encoder.encode(person.getPassword()));
+        updPerson.setRoles(person.getRoles());
+        persons.save(updPerson);
+        return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/{id}")
@@ -128,11 +132,7 @@ public class PersonController {
     }
 
     private void validate(Person person) {
-        var login = person.getLogin();
         var password = person.getPassword();
-        if (login == null || password == null) {
-            throw new NullPointerException("Login and password mustn't be empty");
-        }
         if (password.length() < 6) {
             throw new PasswordException("Invalid password. Password length must be more than 5 characters.");
         }

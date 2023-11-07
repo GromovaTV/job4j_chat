@@ -10,6 +10,7 @@ import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.validation.ConstraintViolationException;
 import java.io.IOException;
 import java.util.ArrayList;
 import static ru.job4j.chat.security.JWTAuthenticationFilter.*;
@@ -19,18 +20,36 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
         super(authManager);
     }
 
+//    @Override
+//    protected void doFilterInternal(HttpServletRequest req,
+//                                    HttpServletResponse res,
+//                                    FilterChain chain) throws IOException, ServletException {
+//        String header = req.getHeader(HEADER_STRING);
+//        if (header == null || !header.startsWith(TOKEN_PREFIX)) {
+//            chain.doFilter(req, res);
+//            return;
+//        }
+//        UsernamePasswordAuthenticationToken authentication = getAuthentication(req);
+//        SecurityContextHolder.getContext().setAuthentication(authentication);
+//        chain.doFilter(req, res);
+//    }
+
     @Override
     protected void doFilterInternal(HttpServletRequest req,
                                     HttpServletResponse res,
                                     FilterChain chain) throws IOException, ServletException {
-        String header = req.getHeader(HEADER_STRING);
-        if (header == null || !header.startsWith(TOKEN_PREFIX)) {
+        try {
+            String header = req.getHeader(HEADER_STRING);
+            if (header == null || !header.startsWith(TOKEN_PREFIX)) {
+                chain.doFilter(req, res);
+                return;
+            }
+            UsernamePasswordAuthenticationToken authentication = getAuthentication(req);
+            SecurityContextHolder.getContext().setAuthentication(authentication);
             chain.doFilter(req, res);
-            return;
+        } catch (ConstraintViolationException | IllegalArgumentException e) {
+            res.sendError(HttpServletResponse.SC_BAD_REQUEST, "Validation failed: " + e.getMessage());
         }
-        UsernamePasswordAuthenticationToken authentication = getAuthentication(req);
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        chain.doFilter(req, res);
     }
 
     private UsernamePasswordAuthenticationToken getAuthentication(HttpServletRequest request) {

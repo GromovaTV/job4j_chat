@@ -9,6 +9,8 @@ public class Message {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
+
+    @Column(unique = true)
     private String message;
 
     @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})

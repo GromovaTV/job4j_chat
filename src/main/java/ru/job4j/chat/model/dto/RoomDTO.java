@@ -2,11 +2,23 @@ package ru.job4j.chat.model.dto;
 
 import ru.job4j.chat.model.Person;
 import ru.job4j.chat.model.Room;
+import ru.job4j.chat.model.validator.Operation;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Positive;
 import java.util.Objects;
 
 public class RoomDTO {
+
+    @Positive(message = "Id should be positive",
+            groups = {Operation.OnPatch.class, Operation.OnUpdate.class})
     private int id;
+
+    @NotBlank(message = "Name should not be empty",
+            groups = {Operation.OnCreate.class, Operation.OnUpdate.class})
     private String name;
+
+    @Positive(message = "Owner id should be positive",
+            groups = {Operation.OnCreate.class, Operation.OnUpdate.class})
     private int ownerId;
 
     public static RoomDTO of(int id, String name, int personId) {
