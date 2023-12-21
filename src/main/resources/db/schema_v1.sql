@@ -31,8 +31,8 @@ create table IF NOT EXISTS message (
 insert into u_role (role) values ('ROLE_ADMIN');
 insert into u_role (role) values ('ROLE_ANONYMOUS');
 insert into u_role (role) values ('ROLE_USER');
-insert into person (login, password) values ('root', '123');
-insert into person (login, password) values ('Thomas', '123');
+insert into person (login, password) values ('rootrt', '$2a$10$WgQczFNvCmkwOD4fU/nJc.kthzSnnl16vACRdhvM.ud8FTZL5zPm.'); -- password: 123456
+insert into person (login, password) values ('Thomas', '$2a$10$WgQczFNvCmkwOD4fU/nJc.kthzSnnl16vACRdhvM.ud8FTZL5zPm.');
 insert into persons_roles (person_id, role_id) values (1, 1);
 insert into persons_roles (person_id, role_id) values (2, 3);
 insert into room (name, person_id) values ('tasks', 1);

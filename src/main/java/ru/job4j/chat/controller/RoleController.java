@@ -27,7 +27,8 @@ public class RoleController {
 
     @PatchMapping("/patch")
     @Validated(Operation.OnPatch.class)
-    public Role patch(@Valid @RequestBody Role role) throws InvocationTargetException, IllegalAccessException {
+    public Role patch(@Valid @RequestBody Role role) throws InvocationTargetException,
+            IllegalAccessException {
         var current = roleRepository.findById(role.getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         var methods = current.getClass().getDeclaredMethods();
@@ -43,7 +44,8 @@ public class RoleController {
                 var getMethod = namePerMethod.get(name);
                 var setMethod = namePerMethod.get(name.replace("get", "set"));
                 if (setMethod == null) {
-                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid properties mapping");
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                            "Invalid properties mapping");
                 }
                 Object newValue = getMethod.invoke(role);
                 if (newValue != null) {

@@ -63,12 +63,16 @@ public class RoomDTO {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         RoomDTO roomDTO = (RoomDTO) o;
-        return id == roomDTO.id &&
-                ownerId == roomDTO.ownerId &&
-                Objects.equals(name, roomDTO.name);
+        return id == roomDTO.id
+                && ownerId == roomDTO.ownerId
+                && Objects.equals(name, roomDTO.name);
     }
 
     @Override

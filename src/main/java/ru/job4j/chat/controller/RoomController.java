@@ -30,7 +30,8 @@ public class RoomController {
     private final RoomRepository roomRepository;
     private final RestTemplate rest;
 
-    public RoomController(PersonRepository persons, final RoomRepository roomRepository, RestTemplate rest) {
+    public RoomController(PersonRepository persons, final RoomRepository roomRepository,
+                          RestTemplate rest) {
         this.persons = persons;
         this.roomRepository = roomRepository;
         this.rest = rest;
@@ -38,7 +39,8 @@ public class RoomController {
 
     @PatchMapping("/patch")
     @Validated(Operation.OnPatch.class)
-    public Room patch(@Valid @RequestBody RoomDTO roomDTO) throws InvocationTargetException, IllegalAccessException {
+    public Room patch(@Valid @RequestBody RoomDTO roomDTO) throws InvocationTargetException,
+            IllegalAccessException {
         System.out.println("DTO: " + roomDTO);
         var current = roomRepository.findById(roomDTO.getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
@@ -58,7 +60,8 @@ public class RoomController {
                 var getMethod = namePerMethod.get(name);
                 var setMethod = namePerMethod.get(name.replace("get", "set"));
                 if (setMethod == null) {
-                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid properties mapping");
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                            "Invalid properties mapping");
                 }
                 Object newValue = getMethod.invoke(room);
                 if (newValue != null) {

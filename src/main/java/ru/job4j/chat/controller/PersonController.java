@@ -27,13 +27,15 @@ import java.util.List;
 @RequestMapping("/users")
 @Validated
 public class PersonController {
-    private static final Logger LOGGER = LoggerFactory.getLogger(PersonController.class.getSimpleName());
+    private static final Logger LOGGER =
+            LoggerFactory.getLogger(PersonController.class.getSimpleName());
     private final PersonRepository persons;
     private final RoleRepository roleRepository;
     private final BCryptPasswordEncoder encoder;
     private final ObjectMapper objectMapper;
 
-    public PersonController(PersonRepository persons, RoleRepository roleRepository, BCryptPasswordEncoder encoder, ObjectMapper objectMapper) {
+    public PersonController(PersonRepository persons, RoleRepository roleRepository,
+                            BCryptPasswordEncoder encoder, ObjectMapper objectMapper) {
         this.persons = persons;
         this.roleRepository = roleRepository;
         this.encoder = encoder;
@@ -42,7 +44,8 @@ public class PersonController {
 
     @PatchMapping("/patch")
     @Validated(Operation.OnPatch.class)
-    public Person patch(@Valid @RequestBody PersonDTO personDTO) throws InvocationTargetException, IllegalAccessException {
+    public Person patch(@Valid @RequestBody PersonDTO personDTO) throws InvocationTargetException,
+            IllegalAccessException {
         System.out.println("DTO: " + personDTO);
         var current = persons.findById(personDTO.getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
@@ -71,7 +74,8 @@ public class PersonController {
                 var getMethod = namePerMethod.get(name);
                 var setMethod = namePerMethod.get(name.replace("get", "set"));
                 if (setMethod == null) {
-                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid properties mapping");
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                            "Invalid properties mapping");
                 }
                 Object newValue = getMethod.invoke(person);
                 if (newValue != null) {
@@ -134,7 +138,8 @@ public class PersonController {
     private void validate(Person person) {
         var password = person.getPassword();
         if (password.length() < 6) {
-            throw new PasswordException("Invalid password. Password length must be more than 5 characters.");
+            throw new PasswordException("Invalid password."
+                    + "Password length must be more than 5 characters.");
         }
     }
 

@@ -19,7 +19,8 @@ import java.util.stream.Collectors;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
-    private static final Logger LOGGER = LoggerFactory.getLogger(GlobalExceptionHandler.class.getSimpleName());
+    private static final Logger LOGGER
+            = LoggerFactory.getLogger(GlobalExceptionHandler.class.getSimpleName());
     private final ObjectMapper objectMapper;
 
     public GlobalExceptionHandler(ObjectMapper objectMapper) {
@@ -32,7 +33,8 @@ public class GlobalExceptionHandler {
                 e.getFieldErrors().stream()
                         .map(f -> Map.of(
                                 f.getField(),
-                                String.format("%s. Actual value: %s", f.getDefaultMessage(), f.getRejectedValue())
+                                String.format("%s. Actual value: %s", f.getDefaultMessage(),
+                                        f.getRejectedValue())
                         ))
                         .collect(Collectors.toList())
         );
@@ -48,34 +50,9 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(e.getMessage());
     }
 
-    //    @ExceptionHandler(value = {NullPointerException.class})
-//    public void handleException(NullPointerException e, HttpServletRequest request, HttpServletResponse response) throws IOException {
-//        response.setStatus(HttpStatus.BAD_REQUEST.value());
-//        response.setContentType("application/json");
-//        response.getWriter().write(objectMapper.writeValueAsString(new HashMap<>() {
-//            {
-//                put("message", "Some of fields are empty");
-//                put("details", e.getMessage());
-//            }
-//        }));
-//        LOGGER.error(e.getMessage());
-//    }
-//
-//    @ExceptionHandler(value = {IllegalArgumentException.class})
-//    public void handleException(IllegalArgumentException e, HttpServletRequest request, HttpServletResponse response) throws IOException {
-//        response.setStatus(HttpStatus.BAD_REQUEST.value());
-//        response.setContentType("application/json");
-//        response.getWriter().write(objectMapper.writeValueAsString(new HashMap<>() {
-//            {
-//                put("message", "Wrong Id");
-//                put("details", e.getMessage());
-//            }
-//        }));
-//        LOGGER.error(e.getMessage());
-//    }
-//
     @ExceptionHandler(value = {ResponseStatusException.class})
-    public void handleException(ResponseStatusException e, HttpServletRequest request, HttpServletResponse response) throws IOException {
+    public void handleException(ResponseStatusException e, HttpServletRequest request,
+                                HttpServletResponse response) throws IOException {
         response.setStatus(HttpStatus.BAD_REQUEST.value());
         response.setContentType("application/json");
         response.getWriter().write(objectMapper.writeValueAsString(new HashMap<>() {
@@ -88,7 +65,8 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(value = {PasswordException.class})
-    public void handleException(PasswordException e, HttpServletRequest request, HttpServletResponse response) throws IOException {
+    public void handleException(PasswordException e, HttpServletRequest request,
+                                HttpServletResponse response) throws IOException {
         response.setStatus(HttpStatus.BAD_REQUEST.value());
         response.setContentType("application/json");
         response.getWriter().write(objectMapper.writeValueAsString(new HashMap<>() {

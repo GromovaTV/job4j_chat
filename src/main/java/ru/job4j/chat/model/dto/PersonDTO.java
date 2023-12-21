@@ -66,13 +66,17 @@ public class PersonDTO {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         PersonDTO personDTO = (PersonDTO) o;
-        return id == personDTO.id &&
-                Objects.equals(login, personDTO.login) &&
-                Objects.equals(password, personDTO.password) &&
-                Objects.equals(roles, personDTO.roles);
+        return id == personDTO.id
+                && Objects.equals(login, personDTO.login)
+                && Objects.equals(password, personDTO.password)
+                && Objects.equals(roles, personDTO.roles);
     }
 
     @Override

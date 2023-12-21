@@ -30,7 +30,8 @@ public class MessageController {
     private final PersonRepository persons;
     private final RoomRepository roomRepository;
 
-    public MessageController(final MessageRepository messageRepository, PersonRepository persons, RoomRepository roomRepository) {
+    public MessageController(final MessageRepository messageRepository, PersonRepository persons,
+                             RoomRepository roomRepository) {
         this.messageRepository = messageRepository;
         this.persons = persons;
         this.roomRepository = roomRepository;
@@ -38,7 +39,9 @@ public class MessageController {
 
     @PatchMapping("/patch")
     @Validated(Operation.OnPatch.class)
-    public Message patch(@Valid @RequestBody MessageDTO messageDTO) throws InvocationTargetException, IllegalAccessException {
+    public Message patch(@Valid @RequestBody MessageDTO messageDTO)
+            throws InvocationTargetException,
+            IllegalAccessException {
         System.out.println("DTO: " + messageDTO);
         var current = messageRepository.findById(messageDTO.getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
@@ -59,7 +62,8 @@ public class MessageController {
                 var getMethod = namePerMethod.get(name);
                 var setMethod = namePerMethod.get(name.replace("get", "set"));
                 if (setMethod == null) {
-                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid properties mapping");
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                            "Invalid properties mapping");
                 }
                 Object newValue = getMethod.invoke(msg);
                 if (newValue != null) {

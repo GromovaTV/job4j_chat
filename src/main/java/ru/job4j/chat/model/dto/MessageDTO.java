@@ -78,13 +78,17 @@ public class MessageDTO {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         MessageDTO that = (MessageDTO) o;
-        return id == that.id &&
-                personId == that.personId &&
-                roomId == that.roomId &&
-                Objects.equals(message, that.message);
+        return id == that.id
+                && personId == that.personId
+                && roomId == that.roomId
+                && Objects.equals(message, that.message);
     }
 
     @Override

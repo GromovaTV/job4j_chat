@@ -20,20 +20,6 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
         super(authManager);
     }
 
-//    @Override
-//    protected void doFilterInternal(HttpServletRequest req,
-//                                    HttpServletResponse res,
-//                                    FilterChain chain) throws IOException, ServletException {
-//        String header = req.getHeader(HEADER_STRING);
-//        if (header == null || !header.startsWith(TOKEN_PREFIX)) {
-//            chain.doFilter(req, res);
-//            return;
-//        }
-//        UsernamePasswordAuthenticationToken authentication = getAuthentication(req);
-//        SecurityContextHolder.getContext().setAuthentication(authentication);
-//        chain.doFilter(req, res);
-//    }
-
     @Override
     protected void doFilterInternal(HttpServletRequest req,
                                     HttpServletResponse res,
@@ -48,7 +34,8 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
             SecurityContextHolder.getContext().setAuthentication(authentication);
             chain.doFilter(req, res);
         } catch (ConstraintViolationException | IllegalArgumentException e) {
-            res.sendError(HttpServletResponse.SC_BAD_REQUEST, "Validation failed: " + e.getMessage());
+            res.sendError(HttpServletResponse.SC_BAD_REQUEST,
+                    "Validation failed: " + e.getMessage());
         }
     }
 
