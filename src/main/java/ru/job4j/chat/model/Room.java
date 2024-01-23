@@ -1,14 +1,17 @@
 package ru.job4j.chat.model;
 
+import lombok.Data;
+import lombok.RequiredArgsConstructor;
 import ru.job4j.chat.model.validator.Operation;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Positive;
-import java.util.Objects;
 
 @Entity(name = "room")
 @Table(name = "room")
+@Data
+@RequiredArgsConstructor
 public class Room {
 
     @Id
@@ -33,47 +36,6 @@ public class Room {
         room.setName(name);
         room.setOwner(owner);
         return room;
-    }
-
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public Person getOwner() {
-        return owner;
-    }
-
-    public void setOwner(Person owner) {
-        this.owner = owner;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        Room room = (Room) o;
-        return id == room.id;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(id);
     }
 
     @Override

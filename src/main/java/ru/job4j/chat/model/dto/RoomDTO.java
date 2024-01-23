@@ -1,12 +1,16 @@
 package ru.job4j.chat.model.dto;
 
+import lombok.Data;
+import lombok.RequiredArgsConstructor;
 import ru.job4j.chat.model.Person;
 import ru.job4j.chat.model.Room;
 import ru.job4j.chat.model.validator.Operation;
+
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Positive;
-import java.util.Objects;
 
+@Data
+@RequiredArgsConstructor
 public class RoomDTO {
 
     @Positive(message = "Id should be positive",
@@ -35,49 +39,6 @@ public class RoomDTO {
         room.setName(dto.getName());
         room.setOwner(person);
         return room;
-    }
-
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public int getOwnerId() {
-        return ownerId;
-    }
-
-    public void setOwnerId(int ownerId) {
-        this.ownerId = ownerId;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        RoomDTO roomDTO = (RoomDTO) o;
-        return id == roomDTO.id
-                && ownerId == roomDTO.ownerId
-                && Objects.equals(name, roomDTO.name);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(id, name, ownerId);
     }
 
     @Override

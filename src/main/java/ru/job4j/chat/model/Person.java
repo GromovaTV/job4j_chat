@@ -1,16 +1,20 @@
 package ru.job4j.chat.model;
 
+import lombok.Data;
+import lombok.RequiredArgsConstructor;
 import org.hibernate.annotations.DynamicUpdate;
 import ru.job4j.chat.model.validator.Operation;
+
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Positive;
 import java.util.List;
-import java.util.Objects;
 
 @Entity(name = "person")
 @DynamicUpdate
 @Table(name = "person")
+@Data
+@RequiredArgsConstructor
 public class Person {
 
     @Id
@@ -39,55 +43,6 @@ public class Person {
         person.setLogin(login);
         person.setPassword(password);
         return person;
-    }
-
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
-
-    public String getLogin() {
-        return login;
-    }
-
-    public void setLogin(String login) {
-        this.login = login;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public List<Role> getRoles() {
-        return roles;
-    }
-
-    public void setRoles(List<Role> roles) {
-        this.roles = roles;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        Person person = (Person) o;
-        return id == person.id;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(id);
     }
 
     @Override

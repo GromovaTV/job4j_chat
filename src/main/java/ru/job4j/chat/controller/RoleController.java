@@ -1,5 +1,7 @@
 package ru.job4j.chat.controller;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -9,6 +11,7 @@ import org.springframework.web.server.ResponseStatusException;
 import ru.job4j.chat.model.Role;
 import ru.job4j.chat.model.validator.Operation;
 import ru.job4j.chat.repository.RoleRepository;
+
 import javax.validation.Valid;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -19,43 +22,12 @@ import java.util.List;
 @RequestMapping("/role")
 @Validated
 public class RoleController {
+
+    private static final Logger LOG = LoggerFactory.getLogger(RoleController.class.getName());
     private final RoleRepository roleRepository;
 
     public RoleController(final RoleRepository roleRepository) {
         this.roleRepository = roleRepository;
-    }
-
-    @PatchMapping("/patch")
-    @Validated(Operation.OnPatch.class)
-    public Role patch(@Valid @RequestBody Role role) throws InvocationTargetException,
-            IllegalAccessException {
-        var current = roleRepository.findById(role.getId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        var methods = current.getClass().getDeclaredMethods();
-        var namePerMethod = new HashMap<String, Method>();
-        for (var method : methods) {
-            var name = method.getName();
-            if (name.startsWith("get") || name.startsWith("set")) {
-                namePerMethod.put(name, method);
-            }
-        }
-        for (var name : namePerMethod.keySet()) {
-            if (name.startsWith("get")) {
-                var getMethod = namePerMethod.get(name);
-                var setMethod = namePerMethod.get(name.replace("get", "set"));
-                if (setMethod == null) {
-                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                            "Invalid properties mapping");
-                }
-                Object newValue = getMethod.invoke(role);
-                if (newValue != null) {
-                    setMethod.invoke(current, newValue);
-                }
-            }
-        }
-        System.out.println("Current pre save:" + current);
-        roleRepository.save(current);
-        return current;
     }
 
     @GetMapping("/")
@@ -105,6 +77,39 @@ public class RoleController {
         role.setId(id);
         this.roleRepository.delete(role);
         return ResponseEntity.ok().build();
+    }
+
+    @PatchMapping("/patch")
+    @Validated(Operation.OnPatch.class)
+    public Role patch(@Valid @RequestBody Role role) throws InvocationTargetException,
+            IllegalAccessException {
+        var current = roleRepository.findById(role.getId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        var methods = current.getClass().getDeclaredMethods();
+        var namePerMethod = new HashMap<String, Method>();
+        for (var method : methods) {
+            var name = method.getName();
+            if (name.startsWith("get") || name.startsWith("set")) {
+                namePerMethod.put(name, method);
+            }
+        }
+        for (var name : namePerMethod.keySet()) {
+            if (name.startsWith("get")) {
+                var getMethod = namePerMethod.get(name);
+                var setMethod = namePerMethod.get(name.replace("get", "set"));
+                if (setMethod == null) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                            "Invalid properties mapping");
+                }
+                Object newValue = getMethod.invoke(role);
+                if (newValue != null) {
+                    setMethod.invoke(current, newValue);
+                }
+            }
+        }
+        LOG.info("Current pre save:" + current);
+        roleRepository.save(current);
+        return current;
     }
 
     private void validate(int id) {

@@ -1,6 +1,7 @@
 package ru.job4j.chat.model.validator;
 
 public class Operation {
+
     public interface OnCreate { }
 
     public interface OnDelete { }

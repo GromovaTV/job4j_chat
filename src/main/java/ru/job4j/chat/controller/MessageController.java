@@ -1,5 +1,7 @@
 package ru.job4j.chat.controller;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -26,6 +28,8 @@ import java.util.stream.StreamSupport;
 @RequestMapping("/message")
 @Validated
 public class MessageController {
+
+    private static final Logger LOG = LoggerFactory.getLogger(MessageController.class.getName());
     private final MessageRepository messageRepository;
     private final PersonRepository persons;
     private final RoomRepository roomRepository;
@@ -35,45 +39,6 @@ public class MessageController {
         this.messageRepository = messageRepository;
         this.persons = persons;
         this.roomRepository = roomRepository;
-    }
-
-    @PatchMapping("/patch")
-    @Validated(Operation.OnPatch.class)
-    public Message patch(@Valid @RequestBody MessageDTO messageDTO)
-            throws InvocationTargetException,
-            IllegalAccessException {
-        System.out.println("DTO: " + messageDTO);
-        var current = messageRepository.findById(messageDTO.getId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        Person person = persons.findById(messageDTO.getPersonId()).orElse(null);
-        Room room = roomRepository.findById(messageDTO.getRoomId()).orElse(null);
-        Message msg = MessageDTO.toMessage(messageDTO, person, room);
-        System.out.println("DTO to Msg: " + msg);
-        var methods = current.getClass().getDeclaredMethods();
-        var namePerMethod = new HashMap<String, Method>();
-        for (var method : methods) {
-            var name = method.getName();
-            if (name.startsWith("get") || name.startsWith("set")) {
-                namePerMethod.put(name, method);
-            }
-        }
-        for (var name : namePerMethod.keySet()) {
-            if (name.startsWith("get")) {
-                var getMethod = namePerMethod.get(name);
-                var setMethod = namePerMethod.get(name.replace("get", "set"));
-                if (setMethod == null) {
-                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                            "Invalid properties mapping");
-                }
-                Object newValue = getMethod.invoke(msg);
-                if (newValue != null) {
-                    setMethod.invoke(current, newValue);
-                }
-            }
-        }
-        System.out.println("Current pre save:" + current);
-        messageRepository.save(current);
-        return current;
     }
 
     @GetMapping("")
@@ -150,6 +115,45 @@ public class MessageController {
         message.setId(id);
         this.messageRepository.delete(message);
         return ResponseEntity.ok().build();
+    }
+
+    @PatchMapping("/patch")
+    @Validated(Operation.OnPatch.class)
+    public Message patch(@Valid @RequestBody MessageDTO messageDTO)
+            throws InvocationTargetException,
+            IllegalAccessException {
+        LOG.info("DTO: " + messageDTO);
+        var current = messageRepository.findById(messageDTO.getId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        Person person = persons.findById(messageDTO.getPersonId()).orElse(null);
+        Room room = roomRepository.findById(messageDTO.getRoomId()).orElse(null);
+        Message msg = MessageDTO.toMessage(messageDTO, person, room);
+        System.out.println("DTO to Msg: " + msg);
+        var methods = current.getClass().getDeclaredMethods();
+        var namePerMethod = new HashMap<String, Method>();
+        for (var method : methods) {
+            var name = method.getName();
+            if (name.startsWith("get") || name.startsWith("set")) {
+                namePerMethod.put(name, method);
+            }
+        }
+        for (var name : namePerMethod.keySet()) {
+            if (name.startsWith("get")) {
+                var getMethod = namePerMethod.get(name);
+                var setMethod = namePerMethod.get(name.replace("get", "set"));
+                if (setMethod == null) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                            "Invalid properties mapping");
+                }
+                Object newValue = getMethod.invoke(msg);
+                if (newValue != null) {
+                    setMethod.invoke(current, newValue);
+                }
+            }
+        }
+        LOG.info("Current pre save:" + current);
+        messageRepository.save(current);
+        return current;
     }
 
     private void validate(int id) {

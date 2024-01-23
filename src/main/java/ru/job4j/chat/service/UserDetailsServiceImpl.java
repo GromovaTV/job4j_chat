@@ -12,6 +12,7 @@ import static java.util.Collections.emptyList;
 
 @Service
 public class UserDetailsServiceImpl implements UserDetailsService {
+
     private PersonRepository persons;
 
     public UserDetailsServiceImpl(PersonRepository persons) {

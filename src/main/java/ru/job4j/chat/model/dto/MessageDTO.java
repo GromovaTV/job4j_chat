@@ -1,13 +1,17 @@
 package ru.job4j.chat.model.dto;
 
+import lombok.Data;
+import lombok.RequiredArgsConstructor;
 import ru.job4j.chat.model.Message;
 import ru.job4j.chat.model.Person;
 import ru.job4j.chat.model.Room;
 import ru.job4j.chat.model.validator.Operation;
+
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Positive;
-import java.util.Objects;
 
+@Data
+@RequiredArgsConstructor
 public class MessageDTO {
 
     @Positive(message = "Id should be positive",
@@ -42,58 +46,6 @@ public class MessageDTO {
         message.setPerson(person);
         message.setRoom(room);
         return message;
-    }
-
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
-
-    public String getMessage() {
-        return message;
-    }
-
-    public void setMessage(String message) {
-        this.message = message;
-    }
-
-    public int getPersonId() {
-        return personId;
-    }
-
-    public void setPersonId(int personId) {
-        this.personId = personId;
-    }
-
-    public int getRoomId() {
-        return roomId;
-    }
-
-    public void setRoomId(int roomId) {
-        this.roomId = roomId;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        MessageDTO that = (MessageDTO) o;
-        return id == that.id
-                && personId == that.personId
-                && roomId == that.roomId
-                && Objects.equals(message, that.message);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(id, message, personId, roomId);
     }
 
     @Override

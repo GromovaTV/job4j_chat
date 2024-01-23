@@ -7,6 +7,7 @@ import ru.job4j.chat.model.Person;
 import java.util.Optional;
 
 public interface PersonRepository extends CrudRepository<Person, Integer> {
+
     @Query("select distinct p from person p left join fetch p.roles where p.login=?1")
     Person findPersonByLogin(String login);
 
