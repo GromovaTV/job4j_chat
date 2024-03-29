@@ -12,7 +12,7 @@ You can create rooms with other persons. Rooms can be designed for two persons o
 * Spring Data JPA
 * Spring Boot
 * Hibernate, PostgreSQL
-* Java
+* Java 17
 * Liquibase
 * Lombok
 * Slf4j, Log4j
