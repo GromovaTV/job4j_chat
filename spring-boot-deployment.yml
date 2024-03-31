@@ -20,17 +20,17 @@ spec:
           ports:
             - containerPort: 8080
           env:
-            - name: SPRING_DATASOURCE_USERNAME
+            - name: DB_USER
               valueFrom:
                 secretKeyRef:
                   name: postgresdb-secret
                   key: postgres-username
-            - name: SPRING_DATASOURCE_PASSWORD
+            - name: DB_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: postgresdb-secret
                   key: postgres-password
-            - name: SPRING_DATASOURCE_URL
+            - name: DB_URL
               valueFrom:
                 configMapKeyRef:
                   name: postgresdb-configmap

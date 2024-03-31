@@ -1,0 +1,42 @@
+workflow:
+  rules:
+    - if: $CI_COMMIT_BRANCH == 'main'
+
+stages:
+  - build
+  - deploy
+
+variables:
+  PROJECT_NAME: ${CI_PROJECT_PATH_SLUG}-${CI_COMMIT_REF_SLUG}
+  IMAGE_NAME: ${CI_PROJECT_PATH}:${CI_COMMIT_REF_SLUG}.${CI_COMMIT_SHORT_SHA}
+
+before_script: [ date ]
+after_script: [ date ]
+
+build:
+  stage: build
+  tags: [ docker ]
+  image: maven:3.8.1-openjdk-17-slim
+  environment:
+    name: ${CI_COMMIT_REF_SLUG}
+  script:
+    - apt-get update
+    - apt-get install -y gettext
+    - mvn package
+    - envsubst < ./docker-compose/docker-compose.yml > ./docker-compose.${CI_ENVIRONMENT_NAME}.yml
+  artifacts:
+    name: ${PROJECT_NAME}
+    paths:
+    - "target/*.jar"
+    - docker-compose.${CI_ENVIRONMENT_NAME}.yml
+    expire_in: "1 days"
+
+
+deploy:
+  stage: deploy
+  tags: [ shell ]
+  environment:
+    name: ${CI_COMMIT_REF_SLUG}
+  script:
+    - docker compose -f docker-compose.${CI_ENVIRONMENT_NAME}.yml -p ${PROJECT_NAME} up --build --detach --force-recreate --remove-orphans
+

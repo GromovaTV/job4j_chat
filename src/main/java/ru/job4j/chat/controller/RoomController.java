@@ -2,6 +2,7 @@ package ru.job4j.chat.controller;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -32,7 +33,8 @@ import java.util.stream.StreamSupport;
 public class RoomController {
 
     private static final Logger LOG = LoggerFactory.getLogger(RoomController.class.getName());
-    private static final String API = "http://localhost:8080/message/";
+    @Value("${app.url}")
+    private String domainName;
     private final PersonRepository persons;
     private final RoomRepository roomRepository;
     private final RestTemplate rest;
@@ -55,7 +57,7 @@ public class RoomController {
     @ResponseBody
     public List<Message> findMessageByRoom(@RequestParam String name) {
         return rest.exchange(
-                API,
+                domainName + "/message/",
                 HttpMethod.GET, null, new ParameterizedTypeReference<List<Message>>() { }, name
         ).getBody();
     }

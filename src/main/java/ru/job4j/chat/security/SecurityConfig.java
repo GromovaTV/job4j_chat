@@ -56,17 +56,4 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         source.registerCorsConfiguration("/**", new CorsConfiguration().applyPermitDefaultValues());
         return source;
     }
-
-    @Bean
-    public OpenAPI springShopOpenApi() {
-        String schemaName = "Auth JWT";
-        return new OpenAPI().addSecurityItem(new SecurityRequirement().addList(schemaName))
-                .components(new Components().addSecuritySchemes(schemaName,
-                        new SecurityScheme()
-                                .name(schemaName)
-                                .type(SecurityScheme.Type.HTTP)
-                                .scheme("bearer")
-                                .bearerFormat("JWT"))
-                ).info(new Info().title("Details API"));
-    }
 }

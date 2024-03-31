@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class LoginController {
 
     @PostMapping("/login")
-    public void fakeLogin(@RequestBody UserDto userDto) {
+    public void swaggerLogin(@RequestBody UserDto userDto) {
         throw new IllegalStateException("This method shouldn't be called."
                 + "It's implemented by Spring Security filters.");
     }

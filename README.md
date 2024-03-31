@@ -22,6 +22,14 @@ You can create rooms with other persons. Rooms can be designed for two persons o
 
 ## Provides simple REST API endpoints:
 
+### Registration:
+
+POST: /users/sign-up + body with login and password
+
+### Authorization:
+
+POST: /login + body with login and password
+
 ### Message:
 
 *GET: /message?name*
@@ -83,7 +91,7 @@ You can create rooms with other persons. Rooms can be designed for two persons o
 ***
 
 ## Accessing the API via Swagger:
-http://localhost:8080/swagger-ui/index.html
+https://chat.195-2-71-38.traefik.me/swagger-ui/index.html
 
 ## Installation Instructions
 
